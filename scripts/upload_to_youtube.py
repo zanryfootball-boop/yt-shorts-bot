@@ -1,47 +1,66 @@
-name: Upload YouTube Short
+"""
+upload_to_youtube.py
+Uploads short.mp4 to YouTube using the YouTube Data API v3.
+Credentials are read from environment variables (set as GitHub Secrets).
+"""
 
-on:
-  schedule:
-    - cron: '30 2 * * *'
-    - cron: '30 12 * * *'
-  workflow_dispatch:
+import json
+import os
 
-jobs:
-  upload-short:
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
+from google.oauth2.credentials import Credentials
+from googleapiclient.discovery import build
+from googleapiclient.http import MediaFileUpload
 
-    steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
+SCOPES = ["https://www.googleapis.com/auth/youtube.upload"]
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
+def get_credentials():
+    creds = Credentials(
+        token=None,
+        refresh_token=os.environ["YT_REFRESH_TOKEN"],
+        token_uri="https://oauth2.googleapis.com/token",
+        client_id=os.environ["YT_CLIENT_ID"],
+        client_secret=os.environ["YT_CLIENT_SECRET"],
+        scopes=SCOPES,
+    )
+    return creds
 
-      - name: Install system dependencies
-        run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y ffmpeg fonts-dejavu-core
+def upload_video(script_path="script.json", video_path="short.mp4"):
+    with open(script_path) as f:
+        script = json.load(f)
 
-      - name: Install Python dependencies
-        run: pip install -r requirements.txt
+    creds = get_credentials()
+    youtube = build("youtube", "v3", credentials=creds)
 
-      - name: Run pipeline
-        env:
-          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
-          YT_CLIENT_ID: ${{ secrets.YT_CLIENT_ID }}
-          YT_CLIENT_SECRET: ${{ secrets.YT_CLIENT_SECRET }}
-          YT_REFRESH_TOKEN: ${{ secrets.YT_REFRESH_TOKEN }}
-        run: |
-          cd scripts
-          python run_pipeline.py
+    body = {
+        "snippet": {
+            "title": script["title"],
+            "description": script["description"],
+            "tags": script.get("tags", []) + ["shorts", "youtubeshorts"],
+            "categoryId": "22",
+            "defaultLanguage": "en",
+        },
+        "status": {
+            "privacyStatus": "public",
+            "selfDeclaredMadeForKids": False,
+            "shortDescription": script["hook"],
+        },
+    }
 
-      - name: Upload video artifact (debug)
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: short-video-${{ github.run_id }}
-          path: scripts/short.mp4
-          retention-days: 3
+    media = MediaFileUpload(video_path, mimetype="video/mp4", resumable=True, chunksize=1024*1024*5)
+
+    print(f"[INFO] Uploading: {script['title']}")
+    request = youtube.videos().insert(part="snippet,status", body=body, media_body=media)
+
+    response = None
+    while response is None:
+        status, response = request.next_chunk()
+        if status:
+            pct = int(status.progress() * 100)
+            print(f"  Upload {pct}%")
+
+    video_id = response["id"]
+    print(f"[OK] Uploaded! https://youtube.com/shorts/{video_id}")
+    return video_id
+
+if __name__ == "__main__":
+    upload_video()
