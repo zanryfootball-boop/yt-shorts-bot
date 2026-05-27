@@ -23,7 +23,7 @@ NICHES = [
 ]
 
 def generate_script() -> dict:
-    client = Groq(api_key=os.environ["GROQ_API_KEY"])
+    client = Groq(api_key = "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")
 
     niche = random.choice(NICHES)
     slot = "morning" if datetime.now().hour < 12 else "evening"
