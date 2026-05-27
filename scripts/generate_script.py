@@ -1,13 +1,13 @@
 """
 generate_script.py
-Picks a trending topic and writes a 60-second YouTube Shorts script using Google Gemini API.
+Picks a trending topic and writes a 60-second YouTube Shorts script using Groq API (free).
 """
 
-import google.generativeai as genai
 import json
 import random
 import os
 from datetime import datetime
+from groq import Groq
 
 NICHES = [
     "mind-blowing psychology facts",
@@ -23,8 +23,7 @@ NICHES = [
 ]
 
 def generate_script() -> dict:
-    genai.configure(api_key=os.environ["GEMINI_API_KEY"])
-    model = genai.GenerativeModel("gemini-2.0-flash-lite")
+    client = Groq(api_key=os.environ["GROQ_API_KEY"])
 
     niche = random.choice(NICHES)
     slot = "morning" if datetime.now().hour < 12 else "evening"
@@ -52,8 +51,14 @@ Return ONLY valid JSON with this exact structure:
   "color_theme": "one of: blue_purple|red_orange|green_teal|gold_white|pink_purple"
 }}"""
 
-    response = model.generate_content(prompt)
-    raw = response.text.strip()
+    response = client.chat.completions.create(
+        model="llama3-8b-8192",
+        messages=[{"role": "user", "content": prompt}],
+        max_tokens=1000,
+        temperature=0.9,
+    )
+
+    raw = response.choices[0].message.content.strip()
 
     if raw.startswith("```"):
         raw = raw.split("```")[1]
