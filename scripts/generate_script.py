@@ -1,8 +1,3 @@
-"""
-generate_script.py
-Picks a trending topic and writes a 60-second YouTube Shorts script using Groq API (free).
-"""
-
 import json
 import random
 import os
@@ -23,7 +18,7 @@ NICHES = [
 ]
 
 def generate_script() -> dict:
-  api_key = "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"
+    api_key = "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"
     client = Groq(api_key=api_key)
 
     niche = random.choice(NICHES)
@@ -79,5 +74,3 @@ Return ONLY valid JSON with this exact structure:
 
 if __name__ == "__main__":
     generate_script()
-
-    
