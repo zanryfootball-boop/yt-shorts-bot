@@ -1,17 +1,9 @@
-"""
-generate_video.py
-Creates an animated YouTube Short (1080x1920) with:
-- Animated background (particles / waves / geometric / starfield / gradient_flow)
-- Word-level subtitles perfectly synced using Whisper timestamps
-"""
-
 import json
 import math
 import os
 import random
 import subprocess
 import tempfile
-
 from PIL import Image, ImageDraw, ImageFont
 
 WIDTH, HEIGHT = 1080, 1920
@@ -49,7 +41,8 @@ def get_audio_duration(audio_path):
 
 def wrap_text(text, draw, font, max_width):
     words = text.split()
-    lines, current = [], ""
+    lines = []
+    current = ""
     for word in words:
         test = (current + " " + word).strip()
         w = draw.textlength(test, font=font)
@@ -69,7 +62,7 @@ def draw_text_centered(draw, lines, font, y_start, color, shadow_color=(0, 0, 0)
         w = draw.textlength(line, font=font)
         x = (WIDTH - w) // 2
         y = y_start + i * lh
-        draw.text((x+3, y+3), line, font=font, fill=shadow_color)
+        draw.text((x + 3, y + 3), line, font=font, fill=shadow_color)
         draw.text((x, y), line, font=font, fill=color)
 
 def make_background_particles(frame_idx, theme):
@@ -89,7 +82,7 @@ def make_background_particles(frame_idx, theme):
         ny = (py + oy) % HEIGHT
         alpha_factor = (math.sin(t * speed * 2 + phase) + 1) / 2
         color = tuple(int(c * alpha_factor) for c in theme["accent"])
-        draw.ellipse([nx-size, ny-size, nx+size, ny+size], fill=color)
+        draw.ellipse([nx - size, ny - size, nx + size, ny + size], fill=color)
     return img
 
 def make_background_waves(frame_idx, theme):
@@ -117,8 +110,8 @@ def make_background_geometric(frame_idx, theme):
     t = frame_idx / FPS
     rng = random.Random(99)
     for i in range(20):
-        cx = rng.randint(100, WIDTH-100)
-        cy = rng.randint(100, HEIGHT-100)
+        cx = rng.randint(100, WIDTH - 100)
+        cy = rng.randint(100, HEIGHT - 100)
         size = rng.randint(40, 180)
         rot = t * rng.uniform(0.3, 1.2) + rng.uniform(0, math.pi)
         alpha = rng.uniform(0.1, 0.35)
@@ -144,7 +137,7 @@ def make_background_starfield(frame_idx, theme):
         phase = rng.uniform(0, math.pi * 2)
         brightness = int(180 + 75 * math.sin(t * speed + phase))
         brightness = max(0, min(255, brightness))
-        draw.ellipse([x-size, y-size, x+size, y+size], fill=(brightness, brightness, brightness))
+        draw.ellipse([x - size, y - size, x + size, y + size], fill=(brightness, brightness, brightness))
     return img
 
 def make_background_gradient_flow(frame_idx, theme):
@@ -160,32 +153,24 @@ def make_background_gradient_flow(frame_idx, theme):
     return img
 
 BG_MAKERS = {
-    "particles":     make_background_particles,
-    "waves":         make_background_waves,
-    "geometric":     make_background_geometric,
-    "starfield":     make_background_starfield,
+    "particles": make_background_particles,
+    "waves": make_background_waves,
+    "geometric": make_background_geometric,
+    "starfield": make_background_starfield,
     "gradient_flow": make_background_gradient_flow,
 }
 
 def build_subtitle_schedule(timestamps, script):
-    """
-    Groups Whisper word timestamps into lines from the script.
-    Each line shows exactly when those words are spoken.
-    """
     all_lines = [script["hook"]] + script["lines"]
     total_words = len(timestamps)
     words_per_line = max(1, total_words // len(all_lines))
-
     schedule = []
     for i, line in enumerate(all_lines):
         start_idx = i * words_per_line
         end_idx = start_idx + words_per_line if i < len(all_lines) - 1 else total_words
         chunk = timestamps[start_idx:end_idx]
         if chunk:
-            start = chunk[0]["start"]
-            end = chunk[-1]["end"]
-            schedule.append((start, end, line))
-
+            schedule.append((chunk[0]["start"], chunk[-1]["end"], line))
     return schedule
 
 def render_frame(frame_idx, script, theme, subtitle_schedule, total_frames, font_hook, font_body, font_small):
@@ -193,64 +178,48 @@ def render_frame(frame_idx, script, theme, subtitle_schedule, total_frames, font
     maker = BG_MAKERS.get(bg_style, make_background_particles)
     img = maker(frame_idx, theme)
     draw = ImageDraw.Draw(img)
-
     t = frame_idx / FPS
     current_text = None
     is_hook = False
-
     for i, (start, end, line) in enumerate(subtitle_schedule):
         if start <= t < end:
             current_text = line
             is_hook = (i == 0)
             break
-
     if current_text:
         font = font_hook if is_hook else font_body
         wrapped = wrap_text(current_text, draw, font, WIDTH - 120)
         lh = font.size + 14
         total_h = len(wrapped) * lh
         y_start = (HEIGHT - total_h) // 2
-        draw.rounded_rectangle(
-            [60, y_start - 24, WIDTH - 60, y_start + total_h + 24],
-            radius=24, fill=(0, 0, 0)
-        )
+        draw.rounded_rectangle([60, y_start - 24, WIDTH - 60, y_start + total_h + 24], radius=24, fill=(0, 0, 0))
         draw_text_centered(draw, wrapped, font, y_start, theme["text"])
-
     progress = min(t / (total_frames / FPS), 1.0)
     draw.rectangle([0, HEIGHT - 8, int(WIDTH * progress), HEIGHT], fill=theme["accent"])
-
     title_lines = wrap_text(script["title"], draw, font_small, WIDTH - 80)[:2]
     draw_text_centered(draw, title_lines, font_small, 60, theme["sub"])
-
     return img
 
 def generate_video(script_path="script.json", audio_path="narration.mp3", timestamps_path="timestamps.json", output_path="short.mp4"):
     with open(script_path) as f:
         script = json.load(f)
-
     with open(timestamps_path) as f:
         timestamps = json.load(f)
-
     theme = COLOR_THEMES.get(script.get("color_theme", "blue_purple"), COLOR_THEMES["blue_purple"])
-    font_hook  = get_font(FONT_SIZE_HOOK)
-    font_body  = get_font(FONT_SIZE_BODY)
+    font_hook = get_font(FONT_SIZE_HOOK)
+    font_body = get_font(FONT_SIZE_BODY)
     font_small = get_font(FONT_SIZE_SMALL)
-
     audio_duration = get_audio_duration(audio_path)
-    print(f"[INFO] Audio duration: {audio_duration:.2f}s")
-
+    print("[INFO] Audio duration: " + str(round(audio_duration, 2)) + "s")
     subtitle_schedule = build_subtitle_schedule(timestamps, script)
     total_frames = int(audio_duration * FPS) + FPS
     frames_dir = tempfile.mkdtemp()
-
-    print(f"[INFO] Rendering {total_frames} frames...")
+    print("[INFO] Rendering " + str(total_frames) + " frames...")
     for i in range(total_frames):
         if i % (FPS * 5) == 0:
-            print(f"  Frame {i}/{total_frames}")
-        frame = render_frame(i, script, theme, subtitle_schedule, total_frames,
-                             font_hook, font_body, font_small)
-        frame.save(os.path.join(frames_dir, f"frame_{i:05d}.png"))
-
+            print("  Frame " + str(i) + "/" + str(total_frames))
+        frame = render_frame(i, script, theme, subtitle_schedule, total_frames, font_hook, font_body, font_small)
+        frame.save(os.path.join(frames_dir, "frame_{:05d}.png".format(i)))
     video_no_audio = output_path.replace(".mp4", "_noaudio.mp4")
     subprocess.run([
         "ffmpeg", "-y", "-framerate", str(FPS),
@@ -258,7 +227,6 @@ def generate_video(script_path="script.json", audio_path="narration.mp3", timest
         "-c:v", "libx264", "-pix_fmt", "yuv420p", "-crf", "23",
         video_no_audio
     ], check=True)
-
     subprocess.run([
         "ffmpeg", "-y",
         "-i", video_no_audio,
@@ -267,8 +235,7 @@ def generate_video(script_path="script.json", audio_path="narration.mp3", timest
         "-shortest", output_path
     ], check=True)
     os.remove(video_no_audio)
-
-    print(f"[OK] Video saved: {output_path}")
+    print("[OK] Video saved: " + output_path)
     return output_path
 
 if __name__ == "__main__":
