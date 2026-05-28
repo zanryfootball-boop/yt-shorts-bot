@@ -89,3 +89,4 @@ Edit `.github/workflows/upload-short.yml`.
 Times are in UTC. IST = UTC+5:30, so:
 - 8:00 AM IST = 2:30 AM UTC → `cron: '30 2 * * *'`
 - 6:00 PM IST = 12:30 PM UTC → `cron: '30 12 * * *'`
+   
