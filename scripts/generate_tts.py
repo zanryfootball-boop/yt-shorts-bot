@@ -1,14 +1,13 @@
 """
 generate_tts.py
 Converts the script lines to an MP3 narration using edge-tts (free Microsoft neural TTS).
-No API key needed — uses the same engine as Microsoft Edge browser.
+Also generates a word-level timestamp file using Whisper for perfect subtitle sync.
 """
 
 import asyncio
 import json
 import os
-import subprocess
-import tempfile
+import whisper
 
 import edge_tts
 
@@ -35,6 +34,24 @@ def generate_tts(script_path="script.json", output_path="narration.mp3"):
     print(f"[INFO] Synthesizing with voice: {voice}")
     asyncio.run(synthesize(full_text, voice, output_path))
     print(f"[OK] Narration saved: {output_path}")
+
+    print("[INFO] Running Whisper for subtitle timestamps...")
+    model = whisper.load_model("base")
+    result = model.transcribe(output_path, word_timestamps=True)
+
+    segments = []
+    for segment in result["segments"]:
+        for word in segment.get("words", []):
+            segments.append({
+                "word": word["word"].strip(),
+                "start": word["start"],
+                "end": word["end"]
+            })
+
+    with open("timestamps.json", "w") as f:
+        json.dump(segments, f, indent=2)
+
+    print(f"[OK] Timestamps saved: timestamps.json ({len(segments)} words)")
 
 if __name__ == "__main__":
     generate_tts()
