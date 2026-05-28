@@ -23,10 +23,7 @@ NICHES = [
 ]
 
 def generate_script() -> dict:
-    api_key = os.environ.get("GROQ_API_KEY", "")
-    if not api_key:
-        raise ValueError("GROQ_API_KEY is not set!")
-
+  api_key = "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"
     client = Groq(api_key=api_key)
 
     niche = random.choice(NICHES)
