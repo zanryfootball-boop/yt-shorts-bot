@@ -56,7 +56,7 @@ def generate_script():
         '    "Line 7 - powerful closing line + follow for more"\n'
         '  ],\n'
         '  "background_style": "' + background + '",\n'
-        '  "color_theme": "one of: blue_purple|red_orange|green_teal|gold_white|pink_purple"\n'
+        '  "color_theme": "one of: champions_gold|pitch_green|stadium_night|fire_red|royal_blue"
         "}"
     )
     response = client.chat.completions.create(
