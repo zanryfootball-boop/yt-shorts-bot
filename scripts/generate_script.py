@@ -5,16 +5,16 @@ from datetime import datetime
 from groq import Groq
 
 NICHES = [
-    "motivational football quotes",
-    "football success mindset",
-    "football legends inspiration",
-    "never give up football motivation",
-    "football dedication and hardwork",
-    "football teamwork quotes",
-    "football champions mindset",
-    "football dreams and goals",
-    "football passion and hunger",
-    "football greatness quotes",
+    "best football skills and tricks",
+    "insane football goals compilation",
+    "football legends greatest moments",
+    "Ronaldo vs Messi greatest moments",
+    "football funny moments",
+    "football impossible saves",
+    "football street skills",
+    "football top 10 goals ever",
+    "football greatest comebacks",
+    "football world cup best moments",
 ]
 
 BACKGROUNDS = [
@@ -28,35 +28,44 @@ BACKGROUNDS = [
     "ball_particles",
 ]
 
+COLOR_THEMES = [
+    "champions_gold",
+    "pitch_green",
+    "stadium_night",
+    "fire_red",
+    "royal_blue",
+]
+
 def generate_script():
     api_key = "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"
     client = Groq(api_key=api_key)
     niche = random.choice(NICHES)
     background = random.choice(BACKGROUNDS)
+    color_theme = random.choice(COLOR_THEMES)
     slot = "morning" if datetime.now().hour < 12 else "evening"
     prompt = (
-        "You are a viral YouTube Shorts script writer specializing in football motivation. "
-        "Write a 60-second motivational script for a Short about: " + niche + "\n\n"
+        "You are a viral YouTube Shorts script writer specializing in football edits. "
+        "Write a 60-second exciting script for a Short about: " + niche + "\n\n"
         "The video is for the " + slot + " audience.\n\n"
-        "Use powerful football quotes, mention legends like Ronaldo, Messi, Pele, Zidane etc.\n"
-        "Make it emotional, powerful and inspiring.\n\n"
+        "Make it energetic, hype and exciting like a football edit video.\n"
+        "Mention legends like Ronaldo, Messi, Mbappe, Neymar etc.\n\n"
         "Return ONLY valid JSON with this exact structure:\n"
         "{\n"
-        '  "title": "YouTube title (max 70 chars, football motivation)",\n'
-        '  "description": "YouTube description (2-3 sentences + hashtags like #football #motivation #shorts)",\n'
-        '  "tags": ["football", "motivation", "shorts", "footballquotes", "inspire"],\n'
-        '  "hook": "First 3 seconds hook line (must grab attention instantly)",\n'
+        '  "title": "YouTube title (max 70 chars, football edits style)",\n'
+        '  "description": "YouTube description (2-3 sentences + hashtags like #football #shorts #edit)",\n'
+        '  "tags": ["football", "shorts", "edit", "footballedits", "ronaldo"],\n'
+        '  "hook": "First 3 seconds hook line (grab attention instantly)",\n'
         '  "lines": [\n'
-        '    "Line 1 of narration (short, punchy, motivational)",\n'
+        '    "Line 1 (short, hype, energetic)",\n'
         '    "Line 2",\n'
         '    "Line 3",\n'
         '    "Line 4",\n'
         '    "Line 5",\n'
         '    "Line 6",\n'
-        '    "Line 7 - powerful closing line + follow for more"\n'
+        '    "Line 7 - powerful closing + follow for more"\n'
         '  ],\n'
         '  "background_style": "' + background + '",\n'
-        '  "color_theme": "one of: champions_gold|pitch_green|stadium_night|fire_red|royal_blue"
+        '  "color_theme": "' + color_theme + '"\n'
         "}"
     )
     response = client.chat.completions.create(
