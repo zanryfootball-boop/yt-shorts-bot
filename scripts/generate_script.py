@@ -5,16 +5,16 @@ from datetime import datetime
 from groq import Groq
 
 NICHES = [
-    "best football skills and tricks",
-    "insane football goals compilation",
-    "football legends greatest moments",
-    "Ronaldo vs Messi greatest moments",
-    "football funny moments",
-    "football impossible saves",
-    "football street skills",
-    "football top 10 goals ever",
-    "football greatest comebacks",
-    "football world cup best moments",
+    "mind-blowing science facts",
+    "surprising space science facts",
+    "human body science facts",
+    "science facts that sound fake",
+    "amazing chemistry facts",
+    "physics facts that blow your mind",
+    "biology facts you never knew",
+    "science facts about the ocean",
+    "science facts about animals",
+    "quantum physics simple facts",
 ]
 
 BACKGROUNDS = [
