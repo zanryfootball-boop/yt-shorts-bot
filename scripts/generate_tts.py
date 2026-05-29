@@ -21,7 +21,7 @@ def generate_tts(script_path="script.json", output_path="narration.mp3"):
         script = json.load(f)
     voice = VOICES.get(script.get("color_theme", "blue_purple"), "en-US-GuyNeural")
     all_lines = [script["hook"]] + script["lines"]
-    full_text = " ... ".join(all_lines)
+    full_text = " ".join(all_lines)
     print("[INFO] Synthesizing with voice: " + voice)
     asyncio.run(synthesize(full_text, voice, output_path))
     print("[OK] Narration saved: " + output_path)
