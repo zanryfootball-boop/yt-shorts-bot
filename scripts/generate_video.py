@@ -65,99 +65,180 @@ def draw_text_centered(draw, lines, font, y_start, color, shadow_color=(0, 0, 0)
         draw.text((x + 3, y + 3), line, font=font, fill=shadow_color)
         draw.text((x, y), line, font=font, fill=color)
 
-def make_background_particles(frame_idx, theme):
-    img = Image.new("RGB", (WIDTH, HEIGHT), theme["bg"])
+def make_stadium_lights(frame_idx, theme):
+    img = Image.new("RGB", (WIDTH, HEIGHT), (5, 5, 15))
     draw = ImageDraw.Draw(img)
-    rng = random.Random(42)
     t = frame_idx / FPS
-    for _ in range(120):
+    rng = random.Random(42)
+    for _ in range(30):
+        lx = rng.randint(0, WIDTH)
+        ly = rng.randint(0, HEIGHT // 3)
+        radius = rng.randint(60, 200)
+        flicker = (math.sin(t * rng.uniform(1, 3) + rng.uniform(0, 6)) + 1) / 2
+        brightness = int(180 * flicker)
+        for r in range(radius, 0, -20):
+            alpha = int((brightness * r) / radius)
+            color = (min(255, alpha + 80), min(255, alpha + 60), min(255, alpha))
+            draw.ellipse([lx - r, ly - r, lx + r, ly + r], fill=color)
+    for y in range(HEIGHT // 2, HEIGHT, 6):
+        green = int(30 + 25 * math.sin(y * 0.05 + t * 0.3))
+        draw.line([(0, y), (WIDTH, y)], fill=(0, green, 0), width=6)
+    for i in range(0, WIDTH, 80):
+        alpha = int(20 + 10 * math.sin(t + i * 0.1))
+        draw.line([(i, HEIGHT // 2), (i, HEIGHT)], fill=(255, 255, 255, alpha), width=1)
+    return img
+
+def make_football_pitch(frame_idx, theme):
+    img = Image.new("RGB", (WIDTH, HEIGHT), (0, 80, 0))
+    draw = ImageDraw.Draw(img)
+    t = frame_idx / FPS
+    for i in range(0, WIDTH, 60):
+        shade = int(10 * math.sin(i * 0.1 + t * 0.2))
+        color = (0, max(0, min(255, 80 + shade)), 0)
+        draw.rectangle([i, 0, i + 30, HEIGHT], fill=color)
+    draw.ellipse([WIDTH // 2 - 200, HEIGHT // 2 - 200, WIDTH // 2 + 200, HEIGHT // 2 + 200], outline=(255, 255, 255), width=5)
+    draw.line([(0, HEIGHT // 2), (WIDTH, HEIGHT // 2)], fill=(255, 255, 255), width=5)
+    draw.line([(0, 0), (WIDTH, 0)], fill=(255, 255, 255), width=5)
+    draw.line([(0, HEIGHT - 5), (WIDTH, HEIGHT - 5)], fill=(255, 255, 255), width=5)
+    draw.rectangle([WIDTH // 2 - 5, HEIGHT // 2 - 5, WIDTH // 2 + 5, HEIGHT // 2 + 5], fill=(255, 255, 255))
+    bx = int(WIDTH // 2 + 150 * math.sin(t * 1.2))
+    by = int(HEIGHT // 2 + 100 * math.cos(t * 0.8))
+    draw.ellipse([bx - 25, by - 25, bx + 25, by + 25], fill=(255, 255, 255), outline=(0, 0, 0), width=2)
+    return img
+
+def make_crowd_energy(frame_idx, theme):
+    img = Image.new("RGB", (WIDTH, HEIGHT), (10, 10, 30))
+    draw = ImageDraw.Draw(img)
+    t = frame_idx / FPS
+    rng = random.Random(77)
+    for _ in range(300):
+        px = rng.randint(0, WIDTH)
+        py = rng.randint(0, int(HEIGHT * 0.6))
+        size = rng.randint(3, 12)
+        wave = math.sin(t * rng.uniform(1, 4) + px * 0.01)
+        brightness = int(100 + 100 * (wave + 1) / 2)
+        colors = [(255, brightness, 0), (255, 0, 0), (0, 0, 255), (255, 255, 255), (0, 255, 0)]
+        color = rng.choice(colors)
+        draw.ellipse([px - size, py - size, px + size, py + size], fill=color)
+    for y in range(int(HEIGHT * 0.6), HEIGHT, 6):
+        green = int(40 + 20 * math.sin(y * 0.05 + t * 0.3))
+        draw.line([(0, y), (WIDTH, y)], fill=(0, green, 0), width=6)
+    return img
+
+def make_goal_celebration(frame_idx, theme):
+    img = Image.new("RGB", (WIDTH, HEIGHT), (5, 5, 20))
+    draw = ImageDraw.Draw(img)
+    t = frame_idx / FPS
+    rng = random.Random(55)
+    for _ in range(150):
+        px = rng.randint(0, WIDTH)
+        start_y = rng.randint(-HEIGHT, 0)
+        speed = rng.uniform(50, 200)
+        py = int((start_y + t * speed) % HEIGHT)
+        size = rng.randint(4, 16)
+        colors = [(255, 215, 0), (255, 165, 0), (255, 255, 255), (255, 50, 50)]
+        color = rng.choice(colors)
+        angle = t * rng.uniform(1, 5)
+        x1 = px + int(size * math.cos(angle))
+        y1 = py + int(size * math.sin(angle))
+        draw.line([(px, py), (x1, y1)], fill=color, width=3)
+    pulse = int(30 + 20 * math.sin(t * 3))
+    draw.ellipse([WIDTH // 2 - pulse * 5, HEIGHT // 2 - pulse * 5,
+                  WIDTH // 2 + pulse * 5, HEIGHT // 2 + pulse * 5],
+                 outline=(255, 215, 0), width=3)
+    return img
+
+def make_training_ground(frame_idx, theme):
+    img = Image.new("RGB", (WIDTH, HEIGHT), (0, 60, 0))
+    draw = ImageDraw.Draw(img)
+    t = frame_idx / FPS
+    for i in range(0, WIDTH, 80):
+        shade = int(15 * math.sin(i * 0.08 + t * 0.15))
+        color = (0, max(0, min(255, 60 + shade)), 0)
+        draw.rectangle([i, 0, i + 40, HEIGHT], fill=color)
+    for i in range(5):
+        cx = int(WIDTH * (i + 1) / 6)
+        cy = int(HEIGHT * 0.3 + 50 * math.sin(t * 0.5 + i))
+        draw.ellipse([cx - 15, cy - 15, cx + 15, cy + 15], fill=(255, 165, 0), outline=(0, 0, 0), width=2)
+    accent = theme["accent"]
+    for i in range(3):
+        y = int(HEIGHT * (0.5 + i * 0.15))
+        draw.line([(100, y), (WIDTH - 100, y)], fill=accent, width=3)
+    return img
+
+def make_trophy_glory(frame_idx, theme):
+    img = Image.new("RGB", (WIDTH, HEIGHT), (10, 8, 2))
+    draw = ImageDraw.Draw(img)
+    t = frame_idx / FPS
+    rng = random.Random(33)
+    for _ in range(80):
         px = rng.randint(0, WIDTH)
         py = rng.randint(0, HEIGHT)
-        speed = rng.uniform(0.3, 1.5)
-        size = rng.randint(2, 8)
-        phase = rng.uniform(0, math.pi * 2)
-        ox = int(math.sin(t * speed + phase) * 30)
-        oy = int((t * speed * 60) % HEIGHT)
-        nx = (px + ox) % WIDTH
-        ny = (py + oy) % HEIGHT
-        alpha_factor = (math.sin(t * speed * 2 + phase) + 1) / 2
-        color = tuple(int(c * alpha_factor) for c in theme["accent"])
-        draw.ellipse([nx - size, ny - size, nx + size, ny + size], fill=color)
+        size = rng.uniform(1, 4)
+        twinkle = (math.sin(t * rng.uniform(1, 5) + rng.uniform(0, 6)) + 1) / 2
+        brightness = int(200 * twinkle)
+        draw.ellipse([px - size, py - size, px + size, py + size],
+                     fill=(brightness, int(brightness * 0.85), 0))
+    cx, cy = WIDTH // 2, HEIGHT // 2
+    glow = int(20 + 15 * math.sin(t * 2))
+    for r in range(200, 0, -20):
+        alpha = int(glow * r / 200)
+        draw.ellipse([cx - r, cy - r, cx + r, cy + r],
+                     fill=(min(255, alpha + 20), min(255, int(alpha * 0.85)), 0))
     return img
 
-def make_background_waves(frame_idx, theme):
+def make_player_silhouette(frame_idx, theme):
     img = Image.new("RGB", (WIDTH, HEIGHT), theme["bg"])
     draw = ImageDraw.Draw(img)
     t = frame_idx / FPS
-    for layer in range(4):
-        amp = 60 + layer * 20
-        freq = 0.003 + layer * 0.001
-        speed = 0.8 + layer * 0.3
-        phase = layer * math.pi / 2
-        alpha = 0.3 + layer * 0.15
+    for y in range(HEIGHT):
+        factor = y / HEIGHT
+        r = int(theme["bg"][0] + (theme["accent"][0] - theme["bg"][0]) * factor * 0.4)
+        g = int(theme["bg"][1] + (theme["accent"][1] - theme["bg"][1]) * factor * 0.4)
+        b = int(theme["bg"][2] + (theme["accent"][2] - theme["bg"][2]) * factor * 0.4)
+        draw.line([(0, y), (WIDTH, y)], fill=(r, g, b))
+    cx = WIDTH // 2
+    cy = int(HEIGHT * 0.55 + 20 * math.sin(t * 0.8))
+    kick_angle = math.sin(t * 1.5) * 0.4
+    draw.ellipse([cx - 40, cy - 280, cx + 40, cy - 200], fill=(20, 20, 20))
+    draw.rectangle([cx - 30, cy - 200, cx + 30, cy - 60], fill=(20, 20, 20))
+    leg1_x = cx + int(40 * math.sin(kick_angle))
+    draw.line([(cx, cy - 60), (leg1_x, cy + 80)], fill=(20, 20, 20), width=20)
+    draw.line([(cx, cy - 60), (cx - 30, cy + 80)], fill=(20, 20, 20), width=20)
+    bx = leg1_x + int(30 * math.sin(kick_angle + 0.5))
+    by = cy + 80
+    draw.ellipse([bx - 20, by - 20, bx + 20, by + 20], fill=(255, 255, 255), outline=(0, 0, 0), width=2)
+    return img
+
+def make_ball_particles(frame_idx, theme):
+    img = Image.new("RGB", (WIDTH, HEIGHT), theme["bg"])
+    draw = ImageDraw.Draw(img)
+    t = frame_idx / FPS
+    rng = random.Random(88)
+    for _ in range(15):
+        bx = int((rng.randint(0, WIDTH) + t * rng.uniform(20, 80)) % WIDTH)
+        by = int((rng.randint(0, HEIGHT) + t * rng.uniform(10, 50)) % HEIGHT)
+        size = rng.randint(15, 50)
+        alpha = rng.uniform(0.2, 0.7)
         color = tuple(int(c * alpha) for c in theme["accent"])
-        pts = []
-        for x in range(0, WIDTH + 10, 10):
-            y = int(HEIGHT * (0.3 + layer * 0.15) + amp * math.sin(freq * x + t * speed + phase))
-            pts.append((x, y))
-        pts += [(WIDTH, HEIGHT), (0, HEIGHT)]
-        draw.polygon(pts, fill=color)
-    return img
-
-def make_background_geometric(frame_idx, theme):
-    img = Image.new("RGB", (WIDTH, HEIGHT), theme["bg"])
-    draw = ImageDraw.Draw(img)
-    t = frame_idx / FPS
-    rng = random.Random(99)
-    for i in range(20):
-        cx = rng.randint(100, WIDTH - 100)
-        cy = rng.randint(100, HEIGHT - 100)
-        size = rng.randint(40, 180)
-        rot = t * rng.uniform(0.3, 1.2) + rng.uniform(0, math.pi)
-        alpha = rng.uniform(0.1, 0.35)
-        color = tuple(int(c * alpha) for c in theme["accent"])
-        pts = []
-        sides = rng.choice([3, 4, 6])
-        for s in range(sides):
-            angle = rot + s * (2 * math.pi / sides)
-            pts.append((cx + size * math.cos(angle), cy + size * math.sin(angle)))
-        draw.polygon(pts, outline=color, width=2)
-    return img
-
-def make_background_starfield(frame_idx, theme):
-    img = Image.new("RGB", (WIDTH, HEIGHT), theme["bg"])
-    draw = ImageDraw.Draw(img)
-    t = frame_idx / FPS
-    rng = random.Random(7)
-    for _ in range(200):
-        x = rng.randint(0, WIDTH)
-        y = rng.randint(0, HEIGHT)
-        speed = rng.uniform(0.2, 2.0)
-        size = rng.uniform(0.5, 3.0)
-        phase = rng.uniform(0, math.pi * 2)
-        brightness = int(180 + 75 * math.sin(t * speed + phase))
-        brightness = max(0, min(255, brightness))
-        draw.ellipse([x - size, y - size, x + size, y + size], fill=(brightness, brightness, brightness))
-    return img
-
-def make_background_gradient_flow(frame_idx, theme):
-    img = Image.new("RGB", (WIDTH, HEIGHT), theme["bg"])
-    draw = ImageDraw.Draw(img)
-    t = frame_idx / FPS
-    for y in range(0, HEIGHT, 4):
-        factor = (math.sin(y * 0.003 + t * 0.5) + 1) / 2
-        r = int(theme["bg"][0] + (theme["accent"][0] - theme["bg"][0]) * factor * 0.5)
-        g = int(theme["bg"][1] + (theme["accent"][1] - theme["bg"][1]) * factor * 0.5)
-        b = int(theme["bg"][2] + (theme["accent"][2] - theme["bg"][2]) * factor * 0.5)
-        draw.line([(0, y), (WIDTH, y)], fill=(r, g, b), width=4)
+        draw.ellipse([bx - size, by - size, bx + size, by + size],
+                     fill=color, outline=(255, 255, 255), width=1)
+        for i in range(4):
+            angle = i * math.pi / 2 + t
+            lx = bx + int(size * 0.6 * math.cos(angle))
+            ly = by + int(size * 0.6 * math.sin(angle))
+            draw.line([(bx, by), (lx, ly)], fill=(255, 255, 255), width=1)
     return img
 
 BG_MAKERS = {
-    "particles": make_background_particles,
-    "waves": make_background_waves,
-    "geometric": make_background_geometric,
-    "starfield": make_background_starfield,
-    "gradient_flow": make_background_gradient_flow,
+    "stadium_lights": make_stadium_lights,
+    "football_pitch": make_football_pitch,
+    "crowd_energy": make_crowd_energy,
+    "goal_celebration": make_goal_celebration,
+    "training_ground": make_training_ground,
+    "trophy_glory": make_trophy_glory,
+    "player_silhouette": make_player_silhouette,
+    "ball_particles": make_ball_particles,
 }
 
 def build_subtitle_schedule(timestamps, script):
@@ -174,8 +255,8 @@ def build_subtitle_schedule(timestamps, script):
     return schedule
 
 def render_frame(frame_idx, script, theme, subtitle_schedule, total_frames, font_hook, font_body, font_small):
-    bg_style = script.get("background_style", "particles")
-    maker = BG_MAKERS.get(bg_style, make_background_particles)
+    bg_style = script.get("background_style", "stadium_lights")
+    maker = BG_MAKERS.get(bg_style, make_stadium_lights)
     img = maker(frame_idx, theme)
     draw = ImageDraw.Draw(img)
     t = frame_idx / FPS
