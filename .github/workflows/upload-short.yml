@@ -2,8 +2,8 @@ name: Upload YouTube Short
 
 on:
   schedule:
-    - cron: '30 2 * * *'   # 8:00 AM IST
-    - cron: '30 12 * * *'  # 6:00 PM IST
+  - cron: '30 2 * * *'
+  - cron: '30 12 * * *'
   workflow_dispatch:
 
 jobs:
@@ -47,7 +47,7 @@ jobs:
           retention-days: 3
 
       - name: Keep workflow active
-        run: echo "Workflow ran at $(date)" >> workflow_log.txt
+        run: echo "Ran at $(date)" >> workflow_log.txt
 
       - name: Commit activity log
         run: |
@@ -55,4 +55,4 @@ jobs:
           git config user.email "github-actions@github.com"
           git add workflow_log.txt
           git commit -m "chore: keep workflow active [skip ci]" || echo "Nothing to commit"
-          git push || echo "Push failed, continuing"
+          git push || echo "Push failed"
