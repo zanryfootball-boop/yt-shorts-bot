@@ -8,8 +8,8 @@ from PIL import Image, ImageDraw, ImageFont
 
 WIDTH, HEIGHT = 1080, 1920
 FPS = 30
-FONT_SIZE_HOOK = 72
-FONT_SIZE_BODY = 58
+FONT_SIZE_HOOK = 76
+FONT_SIZE_BODY = 60
 FONT_SIZE_SMALL = 44
 
 COLOR_THEMES = {
@@ -45,8 +45,7 @@ def wrap_text(text, draw, font, max_width):
     current = ""
     for word in words:
         test = (current + " " + word).strip()
-        w = draw.textlength(test, font=font)
-        if w <= max_width:
+        if draw.textlength(test, font=font) <= max_width:
             current = test
         else:
             if current:
@@ -57,7 +56,7 @@ def wrap_text(text, draw, font, max_width):
     return lines
 
 def draw_text_centered(draw, lines, font, y_start, color, shadow_color=(0, 0, 0), line_height=None):
-    lh = line_height or (font.size + 12)
+    lh = line_height or (font.size + 14)
     for i, line in enumerate(lines):
         w = draw.textlength(line, font=font)
         x = (WIDTH - w) // 2
@@ -85,21 +84,21 @@ def make_stadium_lights(frame_idx, theme):
         draw.line([(0, y), (WIDTH, y)], fill=(0, green, 0), width=6)
     for i in range(0, WIDTH, 80):
         alpha = int(20 + 10 * math.sin(t + i * 0.1))
-        draw.line([(i, HEIGHT // 2), (i, HEIGHT)], fill=(255, 255, 255, alpha), width=1)
+        draw.line([(i, HEIGHT // 2), (i, HEIGHT)], fill=(200, 200, 200), width=1)
     return img
 
 def make_football_pitch(frame_idx, theme):
-    img = Image.new("RGB", (WIDTH, HEIGHT), (0, 80, 0))
+    img = Image.new("RGB", (WIDTH, HEIGHT), (0, 90, 0))
     draw = ImageDraw.Draw(img)
     t = frame_idx / FPS
     for i in range(0, WIDTH, 60):
-        shade = int(10 * math.sin(i * 0.1 + t * 0.2))
-        color = (0, max(0, min(255, 80 + shade)), 0)
+        shade = int(15 * math.sin(i * 0.1 + t * 0.2))
+        color = (0, max(0, min(255, 90 + shade)), 0)
         draw.rectangle([i, 0, i + 30, HEIGHT], fill=color)
     draw.ellipse([WIDTH // 2 - 200, HEIGHT // 2 - 200, WIDTH // 2 + 200, HEIGHT // 2 + 200], outline=(255, 255, 255), width=5)
     draw.line([(0, HEIGHT // 2), (WIDTH, HEIGHT // 2)], fill=(255, 255, 255), width=5)
-    draw.line([(0, 0), (WIDTH, 0)], fill=(255, 255, 255), width=5)
-    draw.line([(0, HEIGHT - 5), (WIDTH, HEIGHT - 5)], fill=(255, 255, 255), width=5)
+    draw.line([(0, 10), (WIDTH, 10)], fill=(255, 255, 255), width=5)
+    draw.line([(0, HEIGHT - 10), (WIDTH, HEIGHT - 10)], fill=(255, 255, 255), width=5)
     draw.rectangle([WIDTH // 2 - 5, HEIGHT // 2 - 5, WIDTH // 2 + 5, HEIGHT // 2 + 5], fill=(255, 255, 255))
     bx = int(WIDTH // 2 + 150 * math.sin(t * 1.2))
     by = int(HEIGHT // 2 + 100 * math.cos(t * 0.8))
@@ -111,17 +110,17 @@ def make_crowd_energy(frame_idx, theme):
     draw = ImageDraw.Draw(img)
     t = frame_idx / FPS
     rng = random.Random(77)
-    for _ in range(300):
+    for _ in range(400):
         px = rng.randint(0, WIDTH)
-        py = rng.randint(0, int(HEIGHT * 0.6))
-        size = rng.randint(3, 12)
+        py = rng.randint(0, int(HEIGHT * 0.65))
+        size = rng.randint(3, 14)
         wave = math.sin(t * rng.uniform(1, 4) + px * 0.01)
-        brightness = int(100 + 100 * (wave + 1) / 2)
+        brightness = int(120 + 100 * (wave + 1) / 2)
         colors = [(255, brightness, 0), (255, 0, 0), (0, 0, 255), (255, 255, 255), (0, 255, 0)]
         color = rng.choice(colors)
         draw.ellipse([px - size, py - size, px + size, py + size], fill=color)
-    for y in range(int(HEIGHT * 0.6), HEIGHT, 6):
-        green = int(40 + 20 * math.sin(y * 0.05 + t * 0.3))
+    for y in range(int(HEIGHT * 0.65), HEIGHT, 6):
+        green = int(50 + 20 * math.sin(y * 0.05 + t * 0.3))
         draw.line([(0, y), (WIDTH, y)], fill=(0, green, 0), width=6)
     return img
 
@@ -130,40 +129,40 @@ def make_goal_celebration(frame_idx, theme):
     draw = ImageDraw.Draw(img)
     t = frame_idx / FPS
     rng = random.Random(55)
-    for _ in range(150):
+    for _ in range(200):
         px = rng.randint(0, WIDTH)
         start_y = rng.randint(-HEIGHT, 0)
-        speed = rng.uniform(50, 200)
+        speed = rng.uniform(80, 250)
         py = int((start_y + t * speed) % HEIGHT)
-        size = rng.randint(4, 16)
-        colors = [(255, 215, 0), (255, 165, 0), (255, 255, 255), (255, 50, 50)]
+        size = rng.randint(5, 18)
+        colors = [(255, 215, 0), (255, 165, 0), (255, 255, 255), (255, 50, 50), (50, 255, 50)]
         color = rng.choice(colors)
         angle = t * rng.uniform(1, 5)
         x1 = px + int(size * math.cos(angle))
         y1 = py + int(size * math.sin(angle))
         draw.line([(px, py), (x1, y1)], fill=color, width=3)
-    pulse = int(30 + 20 * math.sin(t * 3))
+    pulse = int(40 + 25 * math.sin(t * 3))
     draw.ellipse([WIDTH // 2 - pulse * 5, HEIGHT // 2 - pulse * 5,
                   WIDTH // 2 + pulse * 5, HEIGHT // 2 + pulse * 5],
-                 outline=(255, 215, 0), width=3)
+                 outline=(255, 215, 0), width=4)
     return img
 
 def make_training_ground(frame_idx, theme):
-    img = Image.new("RGB", (WIDTH, HEIGHT), (0, 60, 0))
+    img = Image.new("RGB", (WIDTH, HEIGHT), (0, 70, 0))
     draw = ImageDraw.Draw(img)
     t = frame_idx / FPS
     for i in range(0, WIDTH, 80):
-        shade = int(15 * math.sin(i * 0.08 + t * 0.15))
-        color = (0, max(0, min(255, 60 + shade)), 0)
+        shade = int(20 * math.sin(i * 0.08 + t * 0.15))
+        color = (0, max(0, min(255, 70 + shade)), 0)
         draw.rectangle([i, 0, i + 40, HEIGHT], fill=color)
     for i in range(5):
         cx = int(WIDTH * (i + 1) / 6)
-        cy = int(HEIGHT * 0.3 + 50 * math.sin(t * 0.5 + i))
-        draw.ellipse([cx - 15, cy - 15, cx + 15, cy + 15], fill=(255, 165, 0), outline=(0, 0, 0), width=2)
+        cy = int(HEIGHT * 0.3 + 60 * math.sin(t * 0.5 + i))
+        draw.ellipse([cx - 18, cy - 18, cx + 18, cy + 18], fill=(255, 165, 0), outline=(0, 0, 0), width=2)
     accent = theme["accent"]
     for i in range(3):
         y = int(HEIGHT * (0.5 + i * 0.15))
-        draw.line([(100, y), (WIDTH - 100, y)], fill=accent, width=3)
+        draw.line([(100, y), (WIDTH - 100, y)], fill=accent, width=4)
     return img
 
 def make_trophy_glory(frame_idx, theme):
@@ -171,20 +170,19 @@ def make_trophy_glory(frame_idx, theme):
     draw = ImageDraw.Draw(img)
     t = frame_idx / FPS
     rng = random.Random(33)
-    for _ in range(80):
+    for _ in range(100):
         px = rng.randint(0, WIDTH)
         py = rng.randint(0, HEIGHT)
-        size = rng.uniform(1, 4)
+        size = rng.uniform(1, 5)
         twinkle = (math.sin(t * rng.uniform(1, 5) + rng.uniform(0, 6)) + 1) / 2
-        brightness = int(200 * twinkle)
+        brightness = int(220 * twinkle)
         draw.ellipse([px - size, py - size, px + size, py + size],
                      fill=(brightness, int(brightness * 0.85), 0))
     cx, cy = WIDTH // 2, HEIGHT // 2
-    glow = int(20 + 15 * math.sin(t * 2))
-    for r in range(200, 0, -20):
-        alpha = int(glow * r / 200)
+    for r in range(250, 0, -20):
+        glow = int(30 * r / 250)
         draw.ellipse([cx - r, cy - r, cx + r, cy + r],
-                     fill=(min(255, alpha + 20), min(255, int(alpha * 0.85)), 0))
+                     fill=(min(255, glow + 20), min(255, int(glow * 0.85)), 0))
     return img
 
 def make_player_silhouette(frame_idx, theme):
@@ -193,21 +191,21 @@ def make_player_silhouette(frame_idx, theme):
     t = frame_idx / FPS
     for y in range(HEIGHT):
         factor = y / HEIGHT
-        r = int(theme["bg"][0] + (theme["accent"][0] - theme["bg"][0]) * factor * 0.4)
-        g = int(theme["bg"][1] + (theme["accent"][1] - theme["bg"][1]) * factor * 0.4)
-        b = int(theme["bg"][2] + (theme["accent"][2] - theme["bg"][2]) * factor * 0.4)
+        r = int(theme["bg"][0] + (theme["accent"][0] - theme["bg"][0]) * factor * 0.5)
+        g = int(theme["bg"][1] + (theme["accent"][1] - theme["bg"][1]) * factor * 0.5)
+        b = int(theme["bg"][2] + (theme["accent"][2] - theme["bg"][2]) * factor * 0.5)
         draw.line([(0, y), (WIDTH, y)], fill=(r, g, b))
     cx = WIDTH // 2
     cy = int(HEIGHT * 0.55 + 20 * math.sin(t * 0.8))
-    kick_angle = math.sin(t * 1.5) * 0.4
-    draw.ellipse([cx - 40, cy - 280, cx + 40, cy - 200], fill=(20, 20, 20))
-    draw.rectangle([cx - 30, cy - 200, cx + 30, cy - 60], fill=(20, 20, 20))
-    leg1_x = cx + int(40 * math.sin(kick_angle))
-    draw.line([(cx, cy - 60), (leg1_x, cy + 80)], fill=(20, 20, 20), width=20)
-    draw.line([(cx, cy - 60), (cx - 30, cy + 80)], fill=(20, 20, 20), width=20)
-    bx = leg1_x + int(30 * math.sin(kick_angle + 0.5))
-    by = cy + 80
-    draw.ellipse([bx - 20, by - 20, bx + 20, by + 20], fill=(255, 255, 255), outline=(0, 0, 0), width=2)
+    kick_angle = math.sin(t * 1.5) * 0.5
+    draw.ellipse([cx - 45, cy - 290, cx + 45, cy - 200], fill=(20, 20, 20))
+    draw.rectangle([cx - 35, cy - 200, cx + 35, cy - 60], fill=(20, 20, 20))
+    leg1_x = cx + int(50 * math.sin(kick_angle))
+    draw.line([(cx, cy - 60), (leg1_x, cy + 90)], fill=(20, 20, 20), width=22)
+    draw.line([(cx, cy - 60), (cx - 35, cy + 90)], fill=(20, 20, 20), width=22)
+    bx = leg1_x + int(35 * math.sin(kick_angle + 0.5))
+    by = cy + 90
+    draw.ellipse([bx - 22, by - 22, bx + 22, by + 22], fill=(255, 255, 255), outline=(0, 0, 0), width=2)
     return img
 
 def make_ball_particles(frame_idx, theme):
@@ -215,19 +213,19 @@ def make_ball_particles(frame_idx, theme):
     draw = ImageDraw.Draw(img)
     t = frame_idx / FPS
     rng = random.Random(88)
-    for _ in range(15):
-        bx = int((rng.randint(0, WIDTH) + t * rng.uniform(20, 80)) % WIDTH)
-        by = int((rng.randint(0, HEIGHT) + t * rng.uniform(10, 50)) % HEIGHT)
-        size = rng.randint(15, 50)
-        alpha = rng.uniform(0.2, 0.7)
+    for _ in range(20):
+        bx = int((rng.randint(0, WIDTH) + t * rng.uniform(20, 100)) % WIDTH)
+        by = int((rng.randint(0, HEIGHT) + t * rng.uniform(10, 60)) % HEIGHT)
+        size = rng.randint(20, 60)
+        alpha = rng.uniform(0.3, 0.8)
         color = tuple(int(c * alpha) for c in theme["accent"])
         draw.ellipse([bx - size, by - size, bx + size, by + size],
-                     fill=color, outline=(255, 255, 255), width=1)
+                     fill=color, outline=(255, 255, 255), width=2)
         for i in range(4):
             angle = i * math.pi / 2 + t
             lx = bx + int(size * 0.6 * math.cos(angle))
             ly = by + int(size * 0.6 * math.sin(angle))
-            draw.line([(bx, by), (lx, ly)], fill=(255, 255, 255), width=1)
+            draw.line([(bx, by), (lx, ly)], fill=(255, 255, 255), width=2)
     return img
 
 BG_MAKERS = {
@@ -273,7 +271,10 @@ def render_frame(frame_idx, script, theme, subtitle_schedule, total_frames, font
         lh = font.size + 14
         total_h = len(wrapped) * lh
         y_start = (HEIGHT - total_h) // 2
-        draw.rounded_rectangle([60, y_start - 24, WIDTH - 60, y_start + total_h + 24], radius=24, fill=(0, 0, 0))
+        draw.rounded_rectangle(
+            [60, y_start - 24, WIDTH - 60, y_start + total_h + 24],
+            radius=24, fill=(0, 0, 0)
+        )
         draw_text_centered(draw, wrapped, font, y_start, theme["text"])
     progress = min(t / (total_frames / FPS), 1.0)
     draw.rectangle([0, HEIGHT - 8, int(WIDTH * progress), HEIGHT], fill=theme["accent"])
