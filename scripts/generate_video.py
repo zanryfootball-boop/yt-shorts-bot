@@ -287,7 +287,7 @@ def generate_video(script_path="script.json", audio_path="narration.mp3", timest
         script = json.load(f)
     with open(timestamps_path) as f:
         timestamps = json.load(f)
-    theme = COLOR_THEMES.get(script.get("color_theme", "blue_purple"), COLOR_THEMES["blue_purple"])
+    theme = COLOR_THEMES.get(script.get("color_theme", "champions_gold"), COLOR_THEMES["champions_gold"])
     font_hook = get_font(FONT_SIZE_HOOK)
     font_body = get_font(FONT_SIZE_BODY)
     font_small = get_font(FONT_SIZE_SMALL)
